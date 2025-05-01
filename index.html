@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fire-Fighting Robot Control</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+    }
+    button {
+      width: 150px;
+      height: 50px;
+      margin: 10px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Fire-Fighting Robot Control Panel</h1>
+  <div>
+    <button onclick="sendCommand('F')">Forward</button><br>
+    <button onclick="sendCommand('L')">Left</button>
+    <button onclick="sendCommand('S')">Stop</button>
+    <button onclick="sendCommand('R')">Right</button><br>
+    <button onclick="sendCommand('B')">Backward</button><br>
+    <button onclick="sendCommand('P')">Pump</button>
+  </div>
+  <p id="status"></p>
+
+  <script>
+    async function sendCommand(cmd) {
+      const username = 'Omku'; // Replace with your GitHub username
+      const repo = 'FIRE_exto'; // Replace with your repository name
+      const path = 'robot_command.txt'; // The file where commands are written
+      const token = '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'; // Replace with your GitHub PAT
+
+      const url = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
+
+      // Fetch the current file info (including the SHA value)
+      const getResponse = await fetch(url, {
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+
+      if (!getResponse.ok) {
+        document.getElementById('status').innerText = 'Error fetching file information.';
+        return;
+      }
+
+      const fileData = await getResponse.json();
+      const sha = fileData.sha;
+
+      // Base64 encode the command and create the content
+      const content = btoa(`cmd=${cmd}`); // This encodes the command, like 'F', 'L', etc.
+
+      // Create the body for the PUT request
+      const body = {
+        message: `Set command to ${cmd}`,
+        content: content,
+        sha: sha
+      };
+
+      // Send the updated file content to GitHub
+      const putResponse = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (putResponse.ok) {
+        document.getElementById('status').innerText = `Command '${cmd}' sent successfully!`;
+      } else {
+        document.getElementById('status').innerText = 'Error sending command.';
+      }
+    }
+  </script>
+</body>
+</html>
